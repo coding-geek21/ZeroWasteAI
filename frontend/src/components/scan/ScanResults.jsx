@@ -111,3 +111,5 @@ export function ScanResults({ items: initialItems, onAddAll, loading }) {
     </div>
   );
 }
+
+export default ScanResults;

@@ -93,3 +93,5 @@ export function ImageUpload({ onUpload }) {
     </div>
   );
 }
+
+export default ImageUpload;

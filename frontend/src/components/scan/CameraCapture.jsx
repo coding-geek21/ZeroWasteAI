@@ -89,3 +89,5 @@ export function CameraCapture({ onCapture }) {
     </div>
   );
 }
+
+export default CameraCapture;

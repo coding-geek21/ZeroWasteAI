@@ -82,3 +82,5 @@ export function WasteTrendChart({ data }) {
     </div>
   );
 }
+
+export default WasteTrendChart;

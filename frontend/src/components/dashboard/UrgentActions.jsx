@@ -104,3 +104,5 @@ export function UrgentActions({ actions }) {
     </div>
   );
 }
+
+export default UrgentActions;

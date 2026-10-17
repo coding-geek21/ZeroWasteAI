@@ -18,14 +18,20 @@ export function StatCard({ title, value, trend, trendLabel, icon: Icon, iconBg =
       </div>
       {trend != null && (
         <div className="flex items-center gap-1.5">
-          {isPositive ? (
-            <TrendingUp className="w-3.5 h-3.5 text-green-500" />
+          {typeof trend === 'number' ? (
+            <>
+              {trend >= 0 ? (
+                <TrendingUp className="w-3.5 h-3.5 text-green-500" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+              )}
+              <span className={`text-xs font-medium ${trend >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {trend >= 0 ? '+' : ''}{trend}%
+              </span>
+            </>
           ) : (
-            <TrendingDown className="w-3.5 h-3.5 text-red-400" />
+            <span className="text-xs font-medium text-green-600">{trend}</span>
           )}
-          <span className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
-            {isPositive ? '+' : ''}{trend}%
-          </span>
           {trendLabel && (
             <span className="text-xs text-gray-400">{trendLabel}</span>
           )}
@@ -34,3 +40,5 @@ export function StatCard({ title, value, trend, trendLabel, icon: Icon, iconBg =
     </div>
   );
 }
+
+export default StatCard;
