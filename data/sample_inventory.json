@@ -1,0 +1,122 @@
+[
+  {
+    "id": "item001",
+    "name": "Fresh Salmon Fillets",
+    "category": "meat",
+    "quantity": 2.5,
+    "unit": "kg",
+    "freshness_score": 65,
+    "estimated_days_left": 2,
+    "waste_risk": "HIGH",
+    "cost_per_unit": 18.0,
+    "status": "active"
+  },
+  {
+    "id": "item002",
+    "name": "Baby Spinach",
+    "category": "produce",
+    "quantity": 1.2,
+    "unit": "kg",
+    "freshness_score": 55,
+    "estimated_days_left": 1,
+    "waste_risk": "HIGH",
+    "cost_per_unit": 6.5,
+    "status": "active"
+  },
+  {
+    "id": "item003",
+    "name": "Roma Tomatoes",
+    "category": "produce",
+    "quantity": 3.0,
+    "unit": "kg",
+    "freshness_score": 72,
+    "estimated_days_left": 3,
+    "waste_risk": "MEDIUM",
+    "cost_per_unit": 3.2,
+    "status": "active"
+  },
+  {
+    "id": "item004",
+    "name": "Cremini Mushrooms",
+    "category": "produce",
+    "quantity": 0.8,
+    "unit": "kg",
+    "freshness_score": 48,
+    "estimated_days_left": 1,
+    "waste_risk": "HIGH",
+    "cost_per_unit": 9.0,
+    "status": "active"
+  },
+  {
+    "id": "item005",
+    "name": "Greek Yogurt",
+    "category": "dairy",
+    "quantity": 4.0,
+    "unit": "kg",
+    "freshness_score": 80,
+    "estimated_days_left": 5,
+    "waste_risk": "MEDIUM",
+    "cost_per_unit": 5.0,
+    "status": "active"
+  },
+  {
+    "id": "item006",
+    "name": "Aged Cheddar Cheese",
+    "category": "dairy",
+    "quantity": 1.5,
+    "unit": "kg",
+    "freshness_score": 90,
+    "estimated_days_left": 14,
+    "waste_risk": "LOW",
+    "cost_per_unit": 12.0,
+    "status": "active"
+  },
+  {
+    "id": "item007",
+    "name": "Artisan Bread Rolls",
+    "category": "bakery",
+    "quantity": 24,
+    "unit": "pieces",
+    "freshness_score": 60,
+    "estimated_days_left": 2,
+    "waste_risk": "HIGH",
+    "cost_per_unit": 0.75,
+    "status": "active"
+  },
+  {
+    "id": "item008",
+    "name": "Chicken Breast",
+    "category": "meat",
+    "quantity": 3.5,
+    "unit": "kg",
+    "freshness_score": 70,
+    "estimated_days_left": 2,
+    "waste_risk": "HIGH",
+    "cost_per_unit": 10.5,
+    "status": "active"
+  },
+  {
+    "id": "item009",
+    "name": "Bell Peppers (Mixed)",
+    "category": "produce",
+    "quantity": 2.0,
+    "unit": "kg",
+    "freshness_score": 85,
+    "estimated_days_left": 7,
+    "waste_risk": "LOW",
+    "cost_per_unit": 4.0,
+    "status": "active"
+  },
+  {
+    "id": "item010",
+    "name": "Whole Milk",
+    "category": "dairy",
+    "quantity": 6.0,
+    "unit": "liters",
+    "freshness_score": 75,
+    "estimated_days_left": 4,
+    "waste_risk": "MEDIUM",
+    "cost_per_unit": 1.8,
+    "status": "active"
+  }
+]

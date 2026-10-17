@@ -1,0 +1,19 @@
+{
+  "name": "ZeroWaste AI",
+  "short_name": "ZeroWaste",
+  "description": "AI-powered food waste reduction platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "productivity", "utilities"]
+}

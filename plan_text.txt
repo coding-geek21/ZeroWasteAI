@@ -1,0 +1,1118 @@
+# Food Waste Intelligence Platform – Complete Project Plan
+## Project Name: **ZeroWaste AI**
+## Tagline
+*"See your food. Save your food. Feed your community."*
+---
+## 1. Problem Statement
+**Theme:** Sustainability & Social Impact
+**The Problem:**
+- 1/3 of all food produced globally (~1.3 billion tons/year) is wasted
+- Restaurants lose 4-10% of purchased food before it reaches customers
+- Grocery stores discard $15.6 billion in unsold fruits and vegetables annually
+- Food waste generates 8-10% of global greenhouse gas emissions
+- Meanwhile, 828 million people go hungry every day
+**Why existing solutions fail:**
+- Manual inventory tracking is error-prone and time-consuming
+- Expiry management is reactive (discard after expired) instead of predictive
+- No unified system connects inventory visibility → demand prediction → waste prevention actions
+- Small businesses can't afford enterprise waste management platforms
+**Our Solution:**
+An AI-powered platform that uses computer vision to understand food inventory, predicts what will expire and when, and orchestrates waste prevention actions – dynamic discounts, recipe suggestions, and donation matching with local food banks.
+---
+## 2. Solution Architecture
+### 2.1 High-Level Architecture
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    ZEROWASTE AI PLATFORM                      │
+│                                                                │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                     INPUT LAYER                       │    │
+│  │  Camera/Photo Upload   Manual Entry     POS Import    │    │
+│  │  (fridge, shelf,       (quick add       (sales CSV)   │    │
+│  │   storage)              items)                        │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                              ▼                                 │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                AI AGENT LAYER (Gemini)                │    │
+│  │  ┌────────────────┐ ┌────────────────┐ ┌───────────┐ │    │
+│  │  │  VISION AGENT  │ │ PREDICTION     │ │ ACTION    │ │    │
+│  │  │                │ │ AGENT          │ │ AGENT     │ │    │
+│  │  │ • Identify food│ │ • Demand       │ │ • Discount│ │    │
+│  │  │   items        │ │   forecast     │ │   suggest-│ │    │
+│  │  │ • Estimate qty │ │ • Expiry       │ │   ions    │ │    │
+│  │  │ • Read labels  │ │   predict      │ │ • Recipes │ │    │
+│  │  │ • Assess fresh-│ │ • Waste risk   │ │ • Donation│ │    │
+│  │  │   ness         │ │   scoring      │ │   matching│ │    │
+│  │  │                │ │ • Pattern      │ │ • Alerts  │ │    │
+│  │  │                │ │   analysis     │ │           │ │    │
+│  │  └────────────────┘ └────────────────┘ └───────────┘ │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                              ▼                                 │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                      DATA LAYER                       │    │
+│  │  Firestore            Cloud Storage      BigQuery     │    │
+│  │  (inventory, users,   (images,           (analytics,  │    │
+│  │   donations)           receipts)          trends,     │    │
+│  │                                           impact      │    │
+│  │                                           metrics)    │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                                │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                  PRESENTATION LAYER                   │    │
+│  │  Web Dashboard         Mobile-Responsive    Push      │    │
+│  │  (Firebase Hosting)    (PWA)                Alerts    │    │
+│  └──────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────┘
+```
+### 2.2 Detailed Component Architecture
+```
+┌──────────────────────────────────────────────────────────────┐
+│                 FRONTEND (React + Vite)                       │
+│                 Firebase Hosting / PWA                        │
+│                                                                │
+│  [Dashboard Home] [Scan & Capture] [Inventory Manager]        │
+│  [Actions Center] [Impact Tracker]                            │
+└──────────────────────────────────────────────────────────────┘
+                       │  HTTPS / REST API
+                       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                 BACKEND (Python FastAPI)                      │
+│                 Cloud Run (auto-scaling)                      │
+│                                                                │
+│  API ROUTES                                                    │
+│  POST /api/scan             → Vision Agent (image analysis)   │
+│  GET  /api/inventory        → List current inventory          │
+│  POST /api/inventory        → Manual add item                 │
+│  GET  /api/predictions      → Prediction Agent (waste forecast)│
+│  GET  /api/actions          → Action Agent (recommendations)  │
+│  POST /api/actions/execute  → Execute action (discount/donate)│
+│  GET  /api/dashboard        → Dashboard metrics               │
+│  GET  /api/impact           → Impact metrics & analytics      │
+│  POST /api/pos/import       → Import POS/sales data           │
+│                                                                │
+│  AI AGENT SERVICES                                             │
+│                                                                │
+│  VisionService (vision_agent.py)                              │
+│    Input:  Image (base64/URL)                                  │
+│    Model:  Gemini 2.5 Pro (multimodal)                         │
+│    Prompt: Structured extraction prompt                        │
+│    Output: JSON { items: [{ name, quantity, unit,              │
+│            estimated_expiry, freshness_score, category }] }    │
+│                                                                │
+│  PredictionService (prediction_agent.py)                       │
+│    Input:  Inventory data + historical sales + external data   │
+│    Model:  Gemini 2.5 Flash (fast inference)                   │
+│    Logic:  Freshness decay model + demand forecasting          │
+│    Output: JSON { predictions: [{ item_id, days_remaining,     │
+│            waste_probability, demand_forecast,                 │
+│            risk_level: HIGH|MEDIUM|LOW }] }                    │
+│                                                                │
+│  ActionService (action_agent.py)                               │
+│    Input:  Predictions + inventory + user preferences          │
+│    Model:  Gemini 2.5 Pro (reasoning)                          │
+│    Tools:  Recipe DB, Food Bank API, Pricing engine            │
+│    Output: JSON { actions: [{ type: DISCOUNT|RECIPE|DONATE     │
+│            |ALERT, details, priority, estimated_savings }] }   │
+└──────────────────────────────────────────────────────────────┘
+```
+---
+## 3. Technology Stack
+### 3.1 Frontend
+| Component | Technology | Why |
+|---|---|---|
+| Framework | **React 18** + **Vite** | Fast build, rich ecosystem, component reusability |
+| UI Library | **Tailwind CSS** + **shadcn/ui** | Rapid prototyping, polished look, accessible components |
+| Charts | **Recharts** | Lightweight, React-native charting for dashboard |
+| Camera | **react-webcam** | Browser-based camera capture for food scanning |
+| State | **React Context** + **TanStack Query** | Simple state + server state caching |
+| PWA | **Vite PWA Plugin** | Offline support, installable on mobile |
+| Hosting | **Firebase Hosting** | Free tier, CDN, custom domain, SSL |
+### 3.2 Backend
+| Component | Technology | Why |
+|---|---|---|
+| Language | **Python 3.12** | Best AI/ML ecosystem, Gemini SDK support |
+| Framework | **FastAPI** | Async, auto-docs (Swagger), fast, type-safe |
+| AI Model | **Gemini 2.5 Pro** (vision + reasoning) | Multimodal, best-in-class for image understanding |
+| AI Model | **Gemini 2.5 Flash** (predictions) | Fast inference for real-time predictions |
+| SDK | **google-genai** (Google AI Python SDK) | Official Gemini API client |
+| Deployment | **Cloud Run** | Auto-scaling, pay-per-use, container-based |
+| Container | **Docker** | Consistent deployment |
+### 3.3 Data & Storage
+| Component | Technology | Why |
+|---|---|---|
+| Database | **Cloud Firestore** | Real-time sync, serverless, flexible schema |
+| File Storage | **Cloud Storage (GCS)** | Store uploaded food images |
+| Analytics | **BigQuery** (optional/stretch) | Large-scale impact analytics |
+| Caching | **Cloud Run in-memory** | Cache frequent predictions |
+### 3.4 Infrastructure
+| Component | Technology | Why |
+|---|---|---|
+| CI/CD | **Cloud Build** or **GitHub Actions** | Auto-deploy on push |
+| Monitoring | **Cloud Logging** + **Cloud Monitoring** | Observability |
+| Auth | **Firebase Authentication** | Google Sign-In, email/password |
+| Notifications | **Firebase Cloud Messaging** | Push alerts for expiring items |
+---
+## 4. Database Schema (Firestore)
+### 4.1 Collections
+```
+firestore/
+├── users/
+│   └── {userId}
+│       ├── email: string
+│       ├── displayName: string
+│       ├── businessName: string
+│       ├── businessType: "restaurant" | "grocery" | "household" | "food_bank"
+│       ├── location: GeoPoint
+│       ├── createdAt: timestamp
+│       └── preferences: {
+│             wasteThreshold: number (days before expiry to alert)
+│             donationRadius: number (km)
+│             notificationsEnabled: boolean
+│           }
+│
+├── inventory/
+│   └── {itemId}
+│       ├── userId: string (ref → users)
+│       ├── name: string
+│       ├── category: "produce" | "dairy" | "meat" | "bakery" | "frozen" | "canned" | "other"
+│       ├── quantity: number
+│       ├── unit: "kg" | "lbs" | "units" | "liters"
+│       ├── purchaseDate: timestamp
+│       ├── expiryDate: timestamp
+│       ├── estimatedDaysLeft: number
+│       ├── freshnessScore: number (0-100)
+│       ├── wasteRisk: "HIGH" | "MEDIUM" | "LOW"
+│       ├── costPerUnit: number
+│       ├── imageUrl: string (GCS path)
+│       ├── source: "camera_scan" | "manual" | "pos_import"
+│       ├── status: "active" | "consumed" | "discounted" | "donated" | "wasted"
+│       ├── createdAt: timestamp
+│       └── updatedAt: timestamp
+│
+├── actions/
+│   └── {actionId}
+│       ├── userId: string
+│       ├── type: "DISCOUNT" | "RECIPE" | "DONATE" | "ALERT" | "COMPOST"
+│       ├── status: "suggested" | "accepted" | "completed" | "dismissed"
+│       ├── relatedItems: [string] (refs → inventory)
+│       ├── details: {
+│       │     discountPercentage: number (for DISCOUNT)
+│       │     recipeName: string (for RECIPE)
+│       │     recipeInstructions: string (for RECIPE)
+│       │     foodBankId: string (for DONATE)
+│       │     foodBankName: string (for DONATE)
+│       │   }
+│       ├── estimatedSavings: {
+│       │     money: number (USD)
+│       │     food_kg: number
+│       │     co2_kg: number
+│       │   }
+│       ├── createdAt: timestamp
+│       └── completedAt: timestamp
+│
+├── food_banks/
+│   └── {foodBankId}
+│       ├── name: string
+│       ├── address: string
+│       ├── location: GeoPoint
+│       ├── acceptedCategories: [string]
+│       ├── operatingHours: string
+│       ├── contactPhone: string
+│       ├── contactEmail: string
+│       └── currentNeed: "HIGH" | "MEDIUM" | "LOW"
+│
+├── impact_logs/
+│   └── {logId}
+│       ├── userId: string
+│       ├── actionId: string
+│       ├── type: "food_saved" | "money_saved" | "co2_prevented" | "meals_donated"
+│       ├── value: number
+│       ├── unit: string
+│       └── timestamp: timestamp
+│
+└── scan_history/
+    └── {scanId}
+        ├── userId: string
+        ├── imageUrl: string
+        ├── extractedItems: [{ name, quantity, unit, freshness }]
+        ├── processingTimeMs: number
+        └── timestamp: timestamp
+```
+---
+## 5. AI Agent Detailed Design
+### 5.1 Vision Agent – Food Recognition & Assessment
+**Purpose:** Analyze food images to identify items, estimate quantities, assess freshness, and predict expiry dates.
+**Model:** Gemini 2.5 Pro (multimodal)
+**System Prompt:**
+```
+You are a food inventory analysis AI. When given an image of food items
+(in a fridge, on a shelf, in storage, or on a counter), you must:
+1. IDENTIFY every distinct food item visible in the image
+2. ESTIMATE the quantity of each item (count, weight, or volume)
+3. ASSESS the freshness on a 0-100 scale based on visual cues:
+   - Color (browning, yellowing, discoloration)
+   - Texture (wilting, wrinkling, softness indicators)
+   - Mold or spoilage signs
+4. ESTIMATE days until expiry based on:
+   - The food type's typical shelf life
+   - Current freshness assessment
+   - Storage conditions visible in the image (fridge vs counter)
+5. READ any visible labels, dates, or packaging information
+Respond ONLY in this JSON format:
+{
+  "items": [
+    {
+      "name": "string (specific name, e.g., 'Roma Tomatoes' not just 'vegetable')",
+      "category": "produce|dairy|meat|bakery|frozen|canned|beverage|other",
+      "quantity": number,
+      "unit": "kg|lbs|units|liters",
+      "freshness_score": number (0-100, where 100 is perfectly fresh),
+      "estimated_days_left": number,
+      "storage_condition": "refrigerated|room_temperature|frozen",
+      "visible_issues": "string or null (describe any spoilage signs)",
+      "confidence": number (0-1, your confidence in this identification)
+    }
+  ],
+  "image_quality": "good|acceptable|poor",
+  "storage_assessment": "string (brief note on storage conditions observed)",
+  "total_items_detected": number
+}
+```
+**Example Input/Output:**
+Input: Photo of a restaurant fridge shelf
+Output:
+```json
+{
+  "items": [
+    {
+      "name": "Fresh Salmon Fillets",
+      "category": "meat",
+      "quantity": 2.5,
+      "unit": "kg",
+      "freshness_score": 65,
+      "estimated_days_left": 2,
+      "storage_condition": "refrigerated",
+      "visible_issues": "Slight discoloration on edges, still safe but should use soon",
+      "confidence": 0.92
+    },
+    {
+      "name": "Baby Spinach",
+      "category": "produce",
+      "quantity": 0.5,
+      "unit": "kg",
+      "freshness_score": 45,
+      "estimated_days_left": 1,
+      "storage_condition": "refrigerated",
+      "visible_issues": "Wilting leaves, some yellowing at edges",
+      "confidence": 0.88
+    },
+    {
+      "name": "Greek Yogurt Tub",
+      "category": "dairy",
+      "quantity": 3,
+      "unit": "units",
+      "freshness_score": 85,
+      "estimated_days_left": 8,
+      "storage_condition": "refrigerated",
+      "visible_issues": null,
+      "confidence": 0.95
+    }
+  ],
+  "image_quality": "good",
+  "storage_assessment": "Fridge appears well-organized at proper temperature. Items are stored in appropriate zones.",
+  "total_items_detected": 3
+}
+```
+### 5.2 Prediction Agent – Waste Forecasting
+**Purpose:** Analyze inventory data + historical patterns to predict waste risk and demand.
+**Model:** Gemini 2.5 Flash (fast inference)
+**System Prompt:**
+```
+You are a food waste prediction AI for businesses. Given current inventory
+data and optional historical sales patterns, you must:
+1. CALCULATE waste risk for each item (HIGH/MEDIUM/LOW):
+   - HIGH: Will likely waste within 24 hours without intervention
+   - MEDIUM: Will likely waste within 48-72 hours without intervention
+   - LOW: Safe for 3+ days
+2. PREDICT demand for each item category based on:
+   - Day of week patterns (weekends vs weekdays)
+   - Seasonal trends
+   - Historical sales if provided
+3. IDENTIFY items that should be prioritized for action
+4. CALCULATE estimated financial loss if no action is taken
+Respond in JSON:
+{
+  "predictions": [
+    {
+      "item_id": "string",
+      "item_name": "string",
+      "risk_level": "HIGH|MEDIUM|LOW",
+      "waste_probability": number (0-1),
+      "hours_until_critical": number,
+      "estimated_demand_next_24h": number,
+      "surplus_quantity": number (quantity - predicted demand),
+      "financial_risk": number (cost if wasted in USD),
+      "priority_rank": number (1 = most urgent),
+      "reasoning": "string (brief explanation)"
+    }
+  ],
+  "summary": {
+    "total_items_at_risk": number,
+    "total_financial_risk": number,
+    "top_action_needed": "string"
+  }
+}
+```
+### 5.3 Action Agent – Smart Recommendations
+**Purpose:** Generate specific, actionable waste prevention recommendations.
+**Model:** Gemini 2.5 Pro (reasoning + creativity)
+**System Prompt:**
+```
+You are a food waste prevention strategist AI. Given inventory items at risk
+of waste with their predictions, generate SPECIFIC, ACTIONABLE recommendations.
+For each at-risk item, suggest ONE OR MORE of these action types:
+1. DISCOUNT: Dynamic pricing to increase sales
+   - Calculate optimal discount % that maximizes revenue recovery
+   - Consider item category and margin
+2. RECIPE: Creative recipes using at-risk ingredients
+   - Combine multiple at-risk items into one recipe when possible
+   - Include prep time, serving count, and difficulty
+   - Prefer recipes that use the MOST at-risk ingredients together
+3. DONATE: Match with nearby food banks
+   - Only suggest for items with 24+ hours of safe life remaining
+   - Include quantity suitable for donation
+4. ALERT: Notify staff for immediate use
+   - For items in critical state needing same-day use
+5. COMPOST: Last resort for items past safe consumption
+   - Track for waste metrics even if not preventable
+Respond in JSON:
+{
+  "actions": [
+    {
+      "type": "DISCOUNT|RECIPE|DONATE|ALERT|COMPOST",
+      "priority": "URGENT|HIGH|MEDIUM",
+      "target_items": ["item_id1", "item_id2"],
+      "title": "string (short action title)",
+      "description": "string (detailed action description)",
+      "details": {
+        // For DISCOUNT:
+        "suggested_discount_percent": number,
+        "original_price": number,
+        "new_price": number,
+        "expected_sell_through": number (0-1),
+        // For RECIPE:
+        "recipe_name": "string",
+        "ingredients_used": [{"name": "string", "quantity": "string"}],
+        "additional_ingredients_needed": [{"name": "string", "quantity": "string"}],
+        "prep_time_minutes": number,
+        "servings": number,
+        "instructions": ["step 1", "step 2", ...],
+        "difficulty": "easy|medium|hard",
+        // For DONATE:
+        "suitable_quantity": "string",
+        "food_bank_match": "string (name of nearby food bank)",
+        "pickup_deadline": "string",
+        // For ALERT:
+        "alert_message": "string",
+        "deadline": "string"
+      },
+      "estimated_savings": {
+        "money_usd": number,
+        "food_kg": number,
+        "co2_kg": number,
+        "meals_equivalent": number
+      }
+    }
+  ],
+  "total_potential_savings": {
+    "money_usd": number,
+    "food_kg": number,
+    "co2_kg": number
+  }
+}
+```
+---
+## 6. API Endpoints – Detailed Specification
+### 6.1 Authentication
+```
+POST   /api/auth/register    → Register new user/business
+POST   /api/auth/login       → Login (Firebase Auth token)
+GET    /api/auth/profile     → Get user profile
+PUT    /api/auth/profile     → Update profile & preferences
+```
+### 6.2 Inventory Management
+```
+POST   /api/scan                     → Upload image → Vision Agent → returns identified items
+  Request:  { image: base64_string }
+  Response: { items: [...], scan_id: string }
+POST   /api/inventory                → Add item(s) manually or confirm scan results
+  Request:  { items: [{ name, category, quantity, unit, expiry_date, cost_per_unit }] }
+  Response: { added: [...item_ids] }
+GET    /api/inventory                → List all active inventory
+  Query:    ?risk=HIGH&category=produce&sort=expiry
+  Response: { items: [...], total: number }
+PUT    /api/inventory/{id}           → Update item (quantity change, status change)
+  Request:  { quantity: number, status: "consumed"|"wasted"|"donated" }
+DELETE /api/inventory/{id}           → Remove item
+POST   /api/pos/import               → Import POS/sales data CSV
+  Request:  multipart/form-data with CSV file
+  Response: { imported: number, matched_to_inventory: number }
+```
+### 6.3 AI Predictions & Actions
+```
+GET    /api/predictions              → Get waste predictions for all inventory
+  Response: { predictions: [...], summary: {...} }
+GET    /api/actions                  → Get AI-recommended actions
+  Query:    ?type=RECIPE&priority=URGENT
+  Response: { actions: [...], total_savings: {...} }
+POST   /api/actions/{id}/accept      → Accept a suggested action
+POST   /api/actions/{id}/complete    → Mark action as completed
+POST   /api/actions/{id}/dismiss     → Dismiss a suggestion
+POST   /api/actions/ask              → Chat with AI about inventory
+  Request:  { question: "What can I make with the expiring items?" }
+  Response: { answer: string, suggested_actions: [...] }
+```
+### 6.4 Dashboard & Impact
+```
+GET    /api/dashboard                → Dashboard summary metrics
+  Response: {
+    inventory_count: number,
+    items_at_risk: number,
+    actions_pending: number,
+    today_savings: { money, food_kg, co2_kg },
+    weekly_trend: [{ date, waste_kg, saved_kg }]
+  }
+GET    /api/impact                   → Cumulative impact metrics
+  Query:    ?period=week|month|year
+  Response: {
+    total_food_saved_kg: number,
+    total_money_saved_usd: number,
+    total_co2_prevented_kg: number,
+    total_meals_donated: number,
+    trend: [{ date, value }],
+    badges: [{ name, description, earned: boolean }]
+  }
+GET    /api/impact/report            → Generate PDF impact report
+  Response: PDF file stream
+```
+### 6.5 Food Banks
+```
+GET    /api/food-banks               → List nearby food banks
+  Query:    ?lat=xx&lng=yy&radius_km=10
+  Response: { food_banks: [...] }
+POST   /api/donations                → Create a donation record
+  Request:  { food_bank_id, items: [{item_id, quantity}], pickup_time }
+  Response: { donation_id, status: "scheduled" }
+```
+---
+## 7. Frontend Pages & UI Design
+### 7.1 Page Structure
+```
+/                  → Landing page (public)
+/login             → Login / Register
+/dashboard         → Main dashboard (home after login)
+/scan              → Camera scan page
+/inventory         → Full inventory list with filters
+/inventory/{id}    → Item detail
+/actions           → AI action recommendations
+/actions/recipes   → Recipe suggestions
+/donate            → Donation center
+/impact            → Impact dashboard with charts
+/settings          → User/business settings
+```
+### 7.2 Dashboard (Home Page)
+```
+┌────────────────────────────────────────────────────────────┐
+│ ZeroWaste AI                                [Profile] [⚙]  │
+├────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Good morning, Ravi! Here's your food status today.         │
+│                                                              │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐  │
+│  │ 47        │ │ 8         │ │ $124      │ │ 42kg      │  │
+│  │ Items in  │ │ Items at  │ │ Saved     │ │ CO₂       │  │
+│  │ Stock     │ │ Risk      │ │ This Week │ │ Prevented │  │
+│  └───────────┘ └───────────┘ └───────────┘ └───────────┘  │
+│                                                              │
+│  URGENT ACTIONS (3)                                          │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │ Salmon Fillets (2.5kg) – expires tomorrow           │    │
+│  │ → Discount 30% or Donate to City Food Bank          │    │
+│  │ [Apply Discount] [Schedule Donation] [Dismiss]      │    │
+│  ├────────────────────────────────────────────────────┤    │
+│  │ Baby Spinach (0.5kg) – expires in 2 days            │    │
+│  │ → Recipe: Spinach & Mushroom Risotto (uses 3        │    │
+│  │   at-risk items!) [View Recipe] [Dismiss]           │    │
+│  ├────────────────────────────────────────────────────┤    │
+│  │ Bread Rolls (24 units) – expires in 3 days          │    │
+│  │ → Donate surplus (12 units) to Hope Kitchen         │    │
+│  │ [Schedule Donation] [Dismiss]                       │    │
+│  └────────────────────────────────────────────────────┘    │
+│                                                              │
+│  WASTE TREND (Last 7 Days)                                   │
+│  ┌────────────────────────────────────────────────────┐    │
+│  │ [line chart: y-axis kg 0-10; x-axis Mon-Sun;        │    │
+│  │  legend: Saved / Wasted]                            │    │
+│  └────────────────────────────────────────────────────┘    │
+│                                                              │
+│  [Scan Food]   [Add Item]   [Full Report]                    │
+└────────────────────────────────────────────────────────────┘
+```
+### 7.3 Scan Page
+```
+┌────────────────────────────────────────────────────────────┐
+│ ← Back                  Scan Your Food                      │
+├────────────────────────────────────────────────────────────┤
+│                                                              │
+│   ┌────────────────────────────────────────────────────┐   │
+│   │                  CAMERA VIEWFINDER                  │   │
+│   │                                                      │   │
+│   │        Point camera at your fridge, shelf,           │   │
+│   │        or food items                                 │   │
+│   └────────────────────────────────────────────────────┘   │
+│                                                              │
+│   [Capture]   [Upload Photo]                                 │
+│                                                              │
+│   ──────────────────────  OR  ──────────────────────        │
+│                                                              │
+│   After scan, AI identifies items:                           │
+│   ┌────────────────────────────────────────────────────┐   │
+│   │ ✓ Salmon Fillets      2.5 kg   Fresh: 65%   2 days  │   │
+│   │ ✓ Baby Spinach        0.5 kg   Fresh: 45%   1 day   │   │
+│   │ ✓ Greek Yogurt (x3)   3 units  Fresh: 85%   8 days  │   │
+│   │ ⚠ Unknown item – [Edit] [Remove]                    │   │
+│   └────────────────────────────────────────────────────┘   │
+│                                                              │
+│   [Edit Items]   [Add All to Inventory]                      │
+└────────────────────────────────────────────────────────────┘
+```
+### 7.4 Impact Dashboard
+```
+┌────────────────────────────────────────────────────────────┐
+│ ← Back                  Your Impact                [Month ▼]│
+├────────────────────────────────────────────────────────────┤
+│                                                              │
+│  You're in the Top 15% of waste reducers!                    │
+│                                                              │
+│  ┌───────────────────────┐  ┌───────────────────────┐      │
+│  │ 234 kg                │  │ $1,847                │      │
+│  │ Food Saved            │  │ Money Recovered       │      │
+│  │ ↑ 23% vs last         │  │ ↑ 18% vs last         │      │
+│  └───────────────────────┘  └───────────────────────┘      │
+│  ┌───────────────────────┐  ┌───────────────────────┐      │
+│  │ 156 kg                │  │ 89 meals              │      │
+│  │ CO₂ Prevented         │  │ Donated               │      │
+│  │ = 640 km driven       │  │ to 3 food banks       │      │
+│  └───────────────────────┘  └───────────────────────┘      │
+│                                                              │
+│  Monthly Savings Trend                                       │
+│  [===== LINE CHART =====]                                    │
+│                                                              │
+│  Badges Earned                                               │
+│  [First Scan] [10kg Saved] [First Donation] [Zero Waste      │
+│  Week] [Community Hero – donate 50 meals to unlock]          │
+│                                                              │
+│  [Download Impact Report PDF]                                │
+└────────────────────────────────────────────────────────────┘
+```
+---
+## 8. Project Folder Structure
+```
+zerowaste-ai/
+├── frontend/                          # React + Vite frontend
+│   ├── public/
+│   │   ├── favicon.ico
+│   │   ├── logo.svg
+│   │   └── manifest.json              # PWA manifest
+│   ├── src/
+│   │   ├── main.jsx                   # App entry point
+│   │   ├── App.jsx                    # Router setup
+│   │   ├── components/
+│   │   │   ├── ui/                    # shadcn/ui components
+│   │   │   │   ├── button.jsx
+│   │   │   │   ├── card.jsx
+│   │   │   │   ├── badge.jsx
+│   │   │   │   ├── dialog.jsx
+│   │   │   │   └── ...
+│   │   │   ├── layout/
+│   │   │   │   ├── Header.jsx
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   └── Layout.jsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── StatCard.jsx
+│   │   │   │   ├── WasteTrendChart.jsx
+│   │   │   │   ├── UrgentActions.jsx
+│   │   │   │   └── QuickActions.jsx
+│   │   │   ├── scan/
+│   │   │   │   ├── CameraCapture.jsx
+│   │   │   │   ├── ImageUpload.jsx
+│   │   │   │   └── ScanResults.jsx
+│   │   │   ├── inventory/
+│   │   │   │   ├── InventoryList.jsx
+│   │   │   │   ├── InventoryItem.jsx
+│   │   │   │   ├── AddItemForm.jsx
+│   │   │   │   └── FreshnessIndicator.jsx
+│   │   │   ├── actions/
+│   │   │   │   ├── ActionCard.jsx
+│   │   │   │   ├── RecipeCard.jsx
+│   │   │   │   ├── DiscountSuggestion.jsx
+│   │   │   │   └── DonationMatcher.jsx
+│   │   │   └── impact/
+│   │   │       ├── ImpactMetrics.jsx
+│   │   │       ├── SavingsChart.jsx
+│   │   │       ├── BadgeGrid.jsx
+│   │   │       └── CO2Equivalents.jsx
+│   │   ├── pages/
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Scan.jsx
+│   │   │   ├── Inventory.jsx
+│   │   │   ├── Actions.jsx
+│   │   │   ├── Donate.jsx
+│   │   │   ├── Impact.jsx
+│   │   │   └── Settings.jsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.js
+│   │   │   ├── useInventory.js
+│   │   │   ├── usePredictions.js
+│   │   │   └── useImpact.js
+│   │   ├── services/
+│   │   │   ├── api.js                 # Axios/fetch wrapper
+│   │   │   ├── firebase.js            # Firebase config & init
+│   │   │   └── auth.js                # Auth helpers
+│   │   ├── utils/
+│   │   │   ├── formatters.js          # Date, currency, weight formatters
+│   │   │   └── constants.js           # App-wide constants
+│   │   └── styles/
+│   │       └── globals.css            # Tailwind base styles
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   └── package.json
+│
+├── backend/                           # Python FastAPI backend
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py                    # FastAPI app entry, CORS, middleware
+│   │   ├── config.py                  # Environment config (API keys, project ID)
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── auth.py                # Auth routes
+│   │   │   ├── scan.py                # POST /api/scan
+│   │   │   ├── inventory.py           # CRUD inventory routes
+│   │   │   ├── predictions.py         # GET /api/predictions
+│   │   │   ├── actions.py             # Action recommendation routes
+│   │   │   ├── dashboard.py           # Dashboard metrics
+│   │   │   ├── impact.py              # Impact tracking routes
+│   │   │   ├── food_banks.py          # Food bank listing & donation
+│   │   │   └── chat.py                # Conversational AI endpoint
+│   │   ├── services/
+│   │   │   ├── __init__.py
+│   │   │   ├── vision_agent.py        # Gemini Vision – food identification
+│   │   │   ├── prediction_agent.py    # Gemini Flash – waste prediction
+│   │   │   ├── action_agent.py        # Gemini Pro – action recommendations
+│   │   │   ├── gemini_client.py       # Shared Gemini API client setup
+│   │   │   ├── firestore_service.py   # Firestore CRUD operations
+│   │   │   ├── storage_service.py     # GCS image upload/retrieval
+│   │   │   └── impact_calculator.py   # CO2, money, food savings math
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   ├── inventory.py           # Pydantic models for inventory
+│   │   │   ├── predictions.py         # Pydantic models for predictions
+│   │   │   ├── actions.py             # Pydantic models for actions
+│   │   │   └── impact.py              # Pydantic models for impact metrics
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── co2_factors.py         # CO2 emission factors per food type
+│   │       └── food_shelf_life.py     # Default shelf life reference data
+│   ├── tests/
+│   │   ├── test_vision_agent.py
+│   │   ├── test_prediction_agent.py
+│   │   └── test_action_agent.py
+│   ├── Dockerfile                     # Cloud Run container
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── cloudbuild.yaml                # Cloud Build CI/CD
+│
+├── infrastructure/                    # IaC & deployment configs
+│   ├── firebase.json                  # Firebase hosting config
+│   ├── firestore.rules                # Security rules
+│   ├── firestore.indexes.json         # Composite indexes
+│   └── .firebaserc                    # Firebase project alias
+│
+├── data/                              # Reference data & seed data
+│   ├── food_shelf_life.json           # Shelf life reference database
+│   ├── co2_emission_factors.json      # CO2 per kg per food type
+│   ├── sample_food_banks.json         # Seed data for food banks
+│   └── sample_inventory.json          # Demo inventory data
+│
+└── docs/
+    ...
+```
+---
+## 9. Implementation Phases
+### PHASE 0: Project Setup (Day 1 – first 2 hours)
+**Goal:** Get the skeleton running end-to-end.
+**Tasks:**
+```
+☐ Create Google Cloud project
+☐ Enable APIs: Vertex AI / Gemini API, Cloud Run, Firestore, Cloud Storage
+☐ Get Gemini API key (via AI Studio or Vertex AI)
+☐ Create Firebase project linked to GCP project
+☐ Enable Firebase Authentication (Google + Email)
+☐ Set up Firestore database (production mode)
+☐ Set up Cloud Storage bucket for images
+☐ Initialize frontend: npx create-vite@latest frontend --template react
+☐ Install dependencies: tailwindcss, shadcn/ui, react-router, tanstack-query, react-webcam, recharts
+☐ Initialize backend: FastAPI project structure
+☐ Install backend deps: fastapi, uvicorn, google-genai, firebase-admin, python-multipart, pillow
+☐ Create Dockerfile for backend
+☐ Set up .env files with API keys
+☐ Deploy skeleton backend to Cloud Run (hello world)
+☐ Deploy skeleton frontend to Firebase Hosting
+☐ Verify end-to-end connectivity
+```
+**Deliverable:** Empty app shell deployed and accessible.
+---
+### PHASE 1: Vision Agent – Food Scanning (Day 1 – next 4 hours)
+**Goal:** User can photograph food → AI identifies items → items added to inventory.
+**Tasks:**
+```
+Backend:
+☐ Implement gemini_client.py – initialize Gemini model with API key
+☐ Implement vision_agent.py – send image to Gemini 2.5 Pro with structured prompt
+☐ Implement scan router – POST /api/scan endpoint
+☐ Implement Firestore service – save inventory items
+☐ Implement Cloud Storage service – upload and serve images
+☐ Test with sample food images
+Frontend:
+☐ Build CameraCapture component (react-webcam)
+☐ Build ImageUpload component (drag & drop)
+☐ Build ScanResults component (show identified items, allow edit)
+☐ Build Scan page – connect camera → API → results
+☐ Add "Confirm & Add to Inventory" flow
+☐ Build basic InventoryList page to verify items are saved
+```
+**Key Code – vision_agent.py:**
+```python
+import google.genai as genai
+from google.genai import types
+import json
+import base64
+class VisionAgent:
+    def __init__(self, api_key: str):
+        self.client = genai.Client(api_key=api_key)
+        self.model = "gemini-2.5-pro-preview-06-05"
+    async def analyze_image(self, image_base64: str) -> dict:
+        image_part = types.Part.from_bytes(
+            data=base64.b64decode(image_base64),
+            mime_type="image/jpeg"
+        )
+        response = await self.client.aio.models.generate_content(
+            model=self.model,
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        image_part,
+                        types.Part.from_text(VISION_SYSTEM_PROMPT)
+                    ]
+                )
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.2,
+            )
+        )
+        return json.loads(response.text)
+```
+**Deliverable:** Working food scanner – photograph → identify → add to inventory.
+---
+### PHASE 2: Prediction Agent – Waste Forecasting (Day 2 – first 3 hours)
+**Goal:** System predicts which items will waste and when.
+**Tasks:**
+```
+Backend:
+☐ Implement prediction_agent.py – analyze inventory for waste risk
+☐ Implement food_shelf_life.py – reference data for typical shelf lives
+☐ Implement predictions router – GET /api/predictions
+☐ Add waste risk scoring logic (combine AI prediction + shelf life data)
+☐ Add background task to refresh predictions every hour (or on inventory change)
+Frontend:
+☐ Enhance InventoryList with risk badges (HIGH, MEDIUM, LOW)
+☐ Add FreshnessIndicator component (visual progress bar, green→red)
+☐ Add sort/filter by risk level
+☐ Build inventory detail page showing prediction reasoning
+```
+**Deliverable:** Inventory shows real-time waste risk for every item.
+---
+### PHASE 3: Action Agent – Smart Recommendations (Day 2 – next 4 hours)
+**Goal:** AI generates actionable recommendations (discount, recipe, donate, alert).
+**Tasks:**
+```
+Backend:
+☐ Implement action_agent.py – generate recommendations using Gemini Pro
+☐ Implement actions router – GET /api/actions, POST accept/complete/dismiss
+☐ Implement recipe generation (Gemini generates recipes using at-risk items)
+☐ Implement discount calculator (optimal pricing based on waste timeline)
+☐ Implement food bank matching (query Firestore for nearby food banks)
+☐ Seed food bank data (sample_food_banks.json → Firestore)
+☐ Implement impact_calculator.py – CO2 savings, money saved, meals donated formulas
+Frontend:
+☐ Build ActionCard component (different layouts per type)
+☐ Build RecipeCard component (ingredients, steps, prep time)
+☐ Build DiscountSuggestion component (before/after pricing)
+☐ Build DonationMatcher component (map + food bank info)
+☐ Build Actions page with filters (type, priority)
+☐ Add accept/dismiss/complete action flows
+☐ Add notification badge to dashboard for pending actions
+```
+**CO2 Calculation Reference:**
+```python
+# kg CO2e per kg of food wasted (includes production + landfill methane)
+CO2_FACTORS = {
+    "meat": 27.0,      # Beef average
+    "dairy": 3.2,
+    "produce": 2.0,
+    "bakery": 1.4,
+    "frozen": 2.5,
+    "canned": 1.0,
+    "beverage": 0.8,
+    "other": 2.0
+}
+```
+**Deliverable:** Full AI recommendation engine with 4 action types.
+---
+### PHASE 4: Dashboard & Impact Tracking (Day 3 – first 4 hours)
+**Goal:** Polished dashboard + impact metrics with gamification.
+**Tasks:**
+```
+Backend:
+☐ Implement dashboard router – aggregated metrics endpoint
+☐ Implement impact router – cumulative impact over time
+☐ Implement impact_logs collection – track every action's savings
+☐ Add badges/achievements logic
+☐ Add PDF report generation (optional: use reportlab or return HTML)
+Frontend:
+☐ Build Dashboard page – stat cards, urgent actions, waste trend chart
+☐ Build StatCard component with trend indicator (↑ 23%)
+☐ Build WasteTrendChart using Recharts (line chart, last 7/30 days)
+☐ Build Impact page – cumulative metrics, CO2 equivalents, badges
+☐ Build SavingsChart (area chart showing money saved over time)
+☐ Build CO2Equivalents component ("= 640 km driven" contextual comparisons)
+☐ Build BadgeGrid with locked/unlocked states
+☐ Add animated transitions and micro-interactions for engagement
+☐ Implement responsive design for mobile
+```
+**Badge System:**
+```json
+[
+  { "id": "first_scan", "name": "First Scan", "condition": "Complete first food scan" },
+  { "id": "10kg_saved", "name": "Food Saver", "condition": "Save 10kg of food" },
+  { "id": "first_donation", "name": "Community Hero", "condition": "Complete first donation" },
+  { "id": "zero_waste_week", "name": "Zero Waste Week", "condition": "No food wasted for 7 days" },
+  { "id": "50_meals", "name": "Hunger Fighter", "condition": "Donate equivalent of 50 meals" },
+  { "id": "100_co2", "name": "Climate Champion", "condition": "Prevent 100kg CO₂" },
+  { "id": "recipe_master", "name": "Recipe Master", "condition": "Use 10 AI-suggested recipes" }
+]
+```
+**Deliverable:** Complete, visually polished dashboard and impact tracking.
+---
+### PHASE 5: Conversational AI Chat (Day 3 – 2 hours)
+**Goal:** Users can ask natural language questions about their inventory.
+**Tasks:**
+```
+Backend:
+☐ Implement chat router – POST /api/actions/ask
+☐ Build chat context with current inventory + predictions
+☐ Use Gemini with function calling to query inventory data in real-time
+Frontend:
+☐ Build floating chat widget (bottom-right corner)
+☐ Build chat message UI (user bubble + AI bubble)
+☐ Add suggested prompts: "What expires soon?", "Suggest a recipe", "How much have I saved?"
+```
+**Example Interactions:**
+```
+User: "What should I use up this weekend?"
+AI: "You have 3 items expiring by Monday:
+     1. Salmon Fillets (2.5kg) – perfect for Saturday dinner
+     2. Baby Spinach (500g) – great in a frittata
+     3. Mushrooms (300g) – pair with the spinach
+     I suggest: Salmon with Sautéed Spinach & Mushrooms
+     Feeds 4, takes 25 minutes. Want the full recipe?"
+```
+**Deliverable:** Working conversational interface for inventory queries.
+---
+### PHASE 6: Polish, Deploy & Demo Video (Day 4)
+**Goal:** Production-ready deployment, demo recording, documentation.
+**Tasks:**
+```
+Deployment:
+☐ Finalize Cloud Run deployment with proper env vars
+☐ Set up Cloud Build for auto-deploy on git push
+☐ Configure Firestore security rules (users can only read/write own data)
+☐ Set up Cloud Storage CORS and access rules
+☐ Add rate limiting to API endpoints
+☐ Test full flow on deployed environment
+☐ Performance testing – ensure scan completes in < 5 seconds
+☐ Mobile testing – verify PWA works on Android/iOS browsers
+Demo & Submission:
+☐ Seed demo data (realistic inventory for a restaurant)
+☐ Record 3-minute demo video:
+   - 0:00-0:20 → Problem statement (food waste stats)
+   - 0:20-0:50 → Scan food with camera (live demo)
+   - 0:50-1:20 → Show AI predictions and risk dashboard
+   - 1:20-1:50 → Show action recommendations (recipe + donation)
+   - 1:50-2:20 → Execute a donation, show impact metrics
+   - 2:20-2:50 → Ask AI a question, show conversational response
+   - 2:50-3:00 → Impact summary and scalability pitch
+☐ Upload video to YouTube (unlisted)
+☐ Prepare presentation deck (PDF):
+   - Slide 1: Title + team
+   - Slide 2: Problem (1.3B tons, $1T, 8% emissions)
+   - Slide 3: Solution overview (3 agents diagram)
+   - Slide 4: Demo screenshots
+   - Slide 5: Technical architecture
+   - Slide 6: Google Cloud services used
+   - Slide 7: Impact metrics (projected at scale)
+   - Slide 8: Scalability roadmap
+   - Slide 9: Team
+☐ Final documentation check
+```
+---
+## 10. Google Cloud Services Mapping
+| Service | Purpose | Tier |
+|---|---|---|
+| **Gemini 2.5 Pro** | Vision analysis, action recommendations, chat | Pay per token |
+| **Gemini 2.5 Flash** | Predictions (fast, cheap) | Pay per token |
+| **Cloud Run** | Backend API hosting (auto-scales to zero) | Free tier: 2M requests/month |
+| **Firebase Hosting** | Frontend static hosting + CDN | Free tier: 10 GB storage |
+| **Firebase Auth** | User authentication | Free tier: 50K MAU |
+| **Cloud Firestore** | NoSQL database | Free tier: 1 GB storage |
+| **Cloud Storage** | Food images | Free tier: 5 GB |
+| **Cloud Build** | CI/CD pipeline | Free tier: 120 build-min/day |
+| **Firebase Cloud Messaging** | Push notifications (stretch) | Free |
+**Estimated cost for hackathon:** $0-15 (within free tiers for prototype usage).
+---
+## 11. Key Gemini API Configuration
+### Models to use:
+```python
+# For vision (food scanning) – needs multimodal, high accuracy
+VISION_MODEL = "gemini-2.5-pro-preview-06-05"
+# For predictions – needs speed, acceptable accuracy
+PREDICTION_MODEL = "gemini-2.5-flash-preview-05-20"
+# For actions/recipes – needs creativity + reasoning
+ACTION_MODEL = "gemini-2.5-pro-preview-06-05"
+# For chat – needs fast response + function calling
+CHAT_MODEL = "gemini-2.5-flash-preview-05-20"
+```
+### Structured Output Configuration:
+```python
+# Force JSON responses from Gemini
+config = types.GenerateContentConfig(
+    response_mime_type="application/json",
+    response_schema=InventorySchema,  # Pydantic model → JSON schema
+    temperature=0.2,  # Low temp for structured data
+)
+```
+---
+## 12. Demo Script (3-Minute Video)
+**[0:00 - 0:15] THE HOOK**
+"One third of all food produced on Earth is wasted – 1.3 billion tons every year, costing $1 trillion and producing 8% of global greenhouse gases. But what if AI could see your food and save it before it's too late?"
+**[0:15 - 0:25] INTRODUCE ZEROWASTE AI**
+Show landing page. "Meet ZeroWaste AI – an intelligent food waste prevention platform powered by Google Gemini."
+**[0:25 - 0:55] LIVE DEMO: FOOD SCANNING**
+Open phone camera → point at a fridge stocked with food items.
+"I just point my camera at my restaurant's fridge..."
+Show AI identifying items in real-time with freshness scores.
+"Gemini's vision AI instantly identifies every item – salmon at 65% freshness with 2 days left, spinach wilting at 45%, yogurt still fresh."
+Tap "Add to Inventory."
+**[0:55 - 1:20] WASTE PREDICTIONS**
+Switch to dashboard.
+"My dashboard now shows 8 items at risk. The AI predicts which items will waste and when, scoring each one. These salmon fillets? 87% chance of waste within 24 hours – that's $45 about to hit the bin."
+**[1:20 - 1:50] AI ACTIONS**
+Show action cards.
+"But ZeroWaste doesn't just warn – it acts. For the salmon, it suggests a 30% discount to sell through today. For the spinach and mushrooms, it generates a Spinach Mushroom Risotto recipe that uses THREE at-risk items at once. And for surplus bread rolls, it's already matched us with City Food Bank, 2 kilometers away, who need bread donations this week."
+Tap "Schedule Donation."
+**[1:50 - 2:20] CHAT + IMPACT**
+Open chat widget. Type: "What can I cook with expiring items?"
+Show AI response with a full recipe.
+Switch to Impact page. "This month, we've saved 234 kilograms of food, recovered $1,847, and prevented 156 kilograms of CO₂ – that's equivalent to driving 640 kilometers."
+**[2:20 - 2:50] SCALE & ARCHITECTURE**
+Quick flash of architecture diagram.
+"Under the hood, three specialized Gemini agents – Vision, Prediction, and Action – work together, deployed on Cloud Run with Firestore and Firebase. It works for a single restaurant, a grocery chain, or a household fridge."
+**[2:50 - 3:00] CLOSING**
+"Every item saved is a meal for someone who needs it. ZeroWaste AI – see your food, save your food, feed your community."
+---
+## 13. Presentation Deck Outline (8-10 slides)
+**Slide 1: Title**
+- ZeroWaste AI: See Your Food. Save Your Food. Feed Your Community.
+- Team name, hackathon name, theme: Sustainability & Social Impact
+**Slide 2: The Problem**
+- 1.3 billion tons of food wasted annually
+- $1 trillion economic cost
+- 8-10% of global greenhouse gas emissions
+- 828 million people go hungry
+- Visual: split image – overflowing dumpster vs empty plate
+**Slide 3: Our Solution**
+- 3-step flow diagram: Scan → Predict → Act
+- One-line value prop for each agent
+**Slide 4: How It Works (Demo Screenshots)**
+- 4 screenshots: Scan, Dashboard, Actions, Impact
+- Annotated with key features
+**Slide 5: Technical Architecture**
+- Clean architecture diagram showing all 3 agents + Google Cloud services
+- Highlight Gemini multimodal, Cloud Run, Firebase
+**Slide 6: AI Deep Dive**
+- Show structured prompts and agent interaction
+- Highlight: multimodal vision, structured output, function calling, multi-agent
+**Slide 7: Impact Metrics**
+- Prototype results (even if demo data)
+- Projected at scale: "If adopted by 1% of UK restaurants → 15,000 tons saved/year"
+**Slide 8: Scalability & Roadmap**
+- Phase 1: Restaurant pilot
+- Phase 2: Grocery store integration (POS API)
+- Phase 3: Household app (consumer version)
+- Phase 4: Food bank network marketplace
+- Phase 5: Municipal waste reduction dashboards
+**Slide 9: Team**
+- Team member names, roles, photo placeholders
+---
+## 14. Risk Mitigation
+| Risk | Mitigation |
+|---|---|
+| Gemini vision accuracy on food items | Use specific prompts with examples; allow manual correction of scan results |
+| API rate limits during demo | Pre-cache some responses; use demo mode with fallback data |
+| Cloud Run cold start latency | Keep minimum instance = 1; use Flash model for fast responses |
+| Image quality from phone cameras | Add image quality check; provide tips ("ensure good lighting") |
+| Freshness estimation inaccuracy | Show as "AI estimate" with edit option; combine with user-entered expiry dates |
+| Firebase free tier limits | Monitor usage; stay within 50K reads/day easily for hackathon |
+---
+## 15. What Makes This a Winning Submission
+**Technical Merit (40%):**
+- 3 specialized AI agents (Vision, Prediction, Action) – not a chatbot wrapper
+- Multimodal Gemini usage (image → structured data → reasoning → actions)
+- Structured JSON output with Pydantic schema validation
+- Multi-step agentic workflow (scan → predict → recommend → track)
+- Real-time database with Firestore listeners
+- PWA with camera integration
+**Problem Alignment & Impact (25%):**
+- Directly tackles UN SDG 12.3 (halve food waste by 2030)
+- Quantifiable impact metrics (kg saved, CO₂ prevented, meals donated)
+- Three-way impact: business saves money, community gets food, planet gets less CO₂
+**Innovation & Creativity (25%):**
+- Camera-first UX (not form-first) – radically simpler than manual tracking
+- AI generates recipes that combine multiple at-risk items (novel optimization)
+- Donation matching creates a marketplace between waste and need
+- Gamification through badges drives behavior change
+[END OF CAPTURED TEXT – the last photo ends at the "Innovation & Creativity" list in section 15. The original file is 53,229 characters, so anything after that point was not in the photos.]
+---
+TRANSCRIPTION NOTES
+- Transcribed from 21 photographs of a screen showing PROJECT_PLAN.md. The photos overlap, so repeated lines were merged in order.
+- Emoji and icons shown in the original (for example in the diagrams, risk badges and mockups) were not transcribed; box drawings and tree layouts were redrawn to match the original structure as closely as possible.
+- Chart drawings in the dashboard mockup were replaced by a short bracketed description.
+- The "docs/" folder contents and the end of the frontend/src tree were cut off in the photos.
+- In the Impact mockup, the comparison text reads "vs last" and is cut off at the screen edge.
+- Some code lines in the photos were blurry or partly cut; indentation in the code samples was reconstructed.

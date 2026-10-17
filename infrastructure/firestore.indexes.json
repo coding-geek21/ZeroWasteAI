@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "inventory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "waste_risk", "order": "ASCENDING" },
+        { "fieldPath": "expiry_date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "impact_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,18 @@
+{
+  "description": "kg CO2e per kg of food wasted (includes production + landfill methane)",
+  "factors": {
+    "meat": 27.0,
+    "dairy": 3.2,
+    "produce": 2.0,
+    "bakery": 1.4,
+    "frozen": 2.5,
+    "canned": 1.0,
+    "beverage": 0.8,
+    "other": 2.0
+  },
+  "equivalents": {
+    "km_driven_per_kg_co2": 4.1,
+    "trees_per_kg_co2_per_year": 0.05,
+    "meals_per_kg_food": 4
+  }
+}

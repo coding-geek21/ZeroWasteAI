@@ -1,0 +1,62 @@
+[
+  {
+    "id": "fb001",
+    "name": "City Food Bank",
+    "address": "123 Main Street, City Center",
+    "location": { "lat": 40.7128, "lng": -74.0060 },
+    "accepted_categories": ["produce", "bakery", "dairy", "canned"],
+    "operating_hours": "Mon-Fri 9am-5pm, Sat 10am-2pm",
+    "contact_phone": "+1-555-0101",
+    "contact_email": "intake@cityfoodbank.org",
+    "current_need": "HIGH",
+    "distance_km": 1.8
+  },
+  {
+    "id": "fb002",
+    "name": "Riverside Community Pantry",
+    "address": "456 River Road, Riverside District",
+    "location": { "lat": 40.7282, "lng": -73.9942 },
+    "accepted_categories": ["produce", "canned", "frozen", "bakery", "beverage"],
+    "operating_hours": "Tue-Thu 10am-6pm, Sat-Sun 9am-1pm",
+    "contact_phone": "+1-555-0202",
+    "contact_email": "donations@riversidepantry.org",
+    "current_need": "MEDIUM",
+    "distance_km": 3.4
+  },
+  {
+    "id": "fb003",
+    "name": "Northside Hunger Relief Center",
+    "address": "789 North Avenue, Northside",
+    "location": { "lat": 40.7489, "lng": -73.9680 },
+    "accepted_categories": ["produce", "dairy", "meat", "bakery", "canned", "other"],
+    "operating_hours": "Mon-Sat 8am-4pm",
+    "contact_phone": "+1-555-0303",
+    "contact_email": "contact@northsidehungerrelief.org",
+    "current_need": "HIGH",
+    "distance_km": 5.1
+  },
+  {
+    "id": "fb004",
+    "name": "Eastside Mutual Aid Kitchen",
+    "address": "321 East Boulevard, Eastside",
+    "location": { "lat": 40.7061, "lng": -73.9441 },
+    "accepted_categories": ["produce", "canned", "beverage", "bakery"],
+    "operating_hours": "Wed 12pm-7pm, Fri 10am-5pm, Sun 11am-3pm",
+    "contact_phone": "+1-555-0404",
+    "contact_email": "hello@eastsideaid.org",
+    "current_need": "LOW",
+    "distance_km": 7.2
+  },
+  {
+    "id": "fb005",
+    "name": "Metro Food Rescue Network",
+    "address": "555 Central Plaza, Downtown",
+    "location": { "lat": 40.7549, "lng": -74.0040 },
+    "accepted_categories": ["produce", "dairy", "bakery", "canned", "frozen", "beverage", "other"],
+    "operating_hours": "Mon-Fri 7am-7pm, Sat 8am-5pm, Sun 10am-2pm",
+    "contact_phone": "+1-555-0505",
+    "contact_email": "rescue@metrofoodnetwork.org",
+    "current_need": "MEDIUM",
+    "distance_km": 2.6
+  }
+]

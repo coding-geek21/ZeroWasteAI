@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read/write their own profile document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Inventory items are scoped per authenticated user
+    match /inventory/{itemId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Actions (donations, recipes used, discards) are scoped per authenticated user
+    match /actions/{actionId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Food bank directory is readable by any authenticated user; writes are admin-only
+    match /food_banks/{foodBankId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Impact logs are read/create scoped per authenticated user; no updates or deletes
+    match /impact_logs/{logId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}

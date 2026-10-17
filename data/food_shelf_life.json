@@ -1,0 +1,69 @@
+{
+  "categories": {
+    "produce": {
+      "default": 7,
+      "items": {
+        "spinach": 5,
+        "lettuce": 7,
+        "tomatoes": 7,
+        "carrots": 21,
+        "broccoli": 5,
+        "mushrooms": 7,
+        "peppers": 14,
+        "onions": 60,
+        "potatoes": 30,
+        "avocado": 5,
+        "bananas": 7,
+        "apples": 30,
+        "berries": 5,
+        "grapes": 14,
+        "citrus": 21
+      }
+    },
+    "dairy": {
+      "default": 14,
+      "items": {
+        "milk": 7,
+        "yogurt": 14,
+        "cheese": 21,
+        "butter": 30,
+        "cream": 7,
+        "eggs": 35
+      }
+    },
+    "meat": {
+      "default": 3,
+      "items": {
+        "chicken": 2,
+        "beef": 3,
+        "pork": 3,
+        "fish": 2,
+        "salmon": 2,
+        "shrimp": 2,
+        "turkey": 2
+      }
+    },
+    "bakery": {
+      "default": 5,
+      "items": {
+        "bread": 5,
+        "rolls": 3,
+        "muffins": 5,
+        "pastries": 3,
+        "cake": 7
+      }
+    },
+    "frozen": {
+      "default": 180
+    },
+    "canned": {
+      "default": 730
+    },
+    "beverage": {
+      "default": 180
+    },
+    "other": {
+      "default": 14
+    }
+  }
+}
