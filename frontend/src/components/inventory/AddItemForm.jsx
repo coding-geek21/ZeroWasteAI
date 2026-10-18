@@ -34,14 +34,14 @@ export default function AddItemForm({ onClose }) {
       quantity: parseFloat(form.quantity),
       unit: form.unit,
       source: 'manual',
-      ...(form.expiry_date && { expiry_date: form.expiry_date }),
+      ...(form.expiry_date && { expiry_date: new Date(form.expiry_date).toISOString() }),
       ...(form.cost_per_unit && { cost_per_unit: parseFloat(form.cost_per_unit) }),
     }
     try {
       await addItems.mutateAsync([payload])
       onClose()
-    } catch {
-      setError('Failed to add item. Please try again.')
+    } catch (err) {
+      setError(err?.detail || err?.message || 'Failed to add item. Please try again.')
     }
   }
 
