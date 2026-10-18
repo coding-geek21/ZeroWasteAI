@@ -4,6 +4,8 @@ const baseURL = import.meta.env.VITE_API_BASE_URL
   ? `${import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')}/api`
   : '/api';
 
+console.log('[ZeroWaste AI] Active API Base URL:', baseURL);
+
 const api = axios.create({
   baseURL,
   timeout: 30000,
