@@ -107,7 +107,7 @@ export async function getFoodBanks(lat, lng, radius = 25) {
 // ─── AI Assistant ────────────────────────────────────────────────────────────
 
 export async function askAI(question) {
-  return api.post('/ai/ask', { question });
+  return api.post('/actions/ask', { question });
 }
 
 export default api;
