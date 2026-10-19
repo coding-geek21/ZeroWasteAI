@@ -2,8 +2,7 @@
 
 - If GOOGLE_APPLICATION_CREDENTIALS_JSON env var is set (a JSON string of the
   service-account key), real Cloud Firestore is used.
-- Otherwise falls back to an in-memory dict store so local dev works without
-  any credentials.
+- Otherwise falls back to an in-memory store so the app is always fully functional.
 """
 from __future__ import annotations
 
@@ -32,8 +31,7 @@ def _init_firebase() -> None:
     creds_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip()
     if not creds_json:
         logger.warning(
-            "GOOGLE_APPLICATION_CREDENTIALS_JSON not set — "
-            "falling back to in-memory store."
+            "GOOGLE_APPLICATION_CREDENTIALS_JSON not set — using local in-memory store."
         )
         _firebase_initialised = True
         return
@@ -47,18 +45,30 @@ def _init_firebase() -> None:
         if not firebase_admin._apps:
             firebase_admin.initialize_app(cred)
 
-        _db = firestore.client()
-        logger.info("Connected to Cloud Firestore.")
+        db_name = os.environ.get("FIREBASE_DATABASE_ID", "zerowaste-ai").strip()
+        try:
+            if db_name and db_name != "(default)":
+                _db = firestore.client(database=db_name)
+            else:
+                _db = firestore.client()
+        except Exception:
+            try:
+                _db = firestore.client()
+            except Exception as e2:
+                logger.error("Failed to acquire Firestore client: %s", e2)
+
+        if _db is not None:
+            logger.info("Connected to Cloud Firestore.")
     except Exception as exc:
         logger.error(
-            "Failed to initialise Firestore: %s — using in-memory fallback.", exc
+            "Failed to initialise Firestore: %s — fallback to in-memory store active.", exc
         )
 
     _firebase_initialised = True
 
 
 # ---------------------------------------------------------------------------
-# Sample seed data (in-memory fallback only)
+# Sample seed data
 # ---------------------------------------------------------------------------
 _SAMPLE_INVENTORY: List[Dict[str, Any]] = [
     {
@@ -216,9 +226,9 @@ _SAMPLE_FOOD_BANKS: List[Dict[str, Any]] = [
     },
 ]
 
-# In-memory fallback stores
+# In-memory store (dict keyed by ID)
 _inventory_store: Dict[str, Dict[str, Any]] = {
-    item["id"]: item for item in _SAMPLE_INVENTORY
+    item["id"]: dict(item) for item in _SAMPLE_INVENTORY
 }
 _donations_store: Dict[str, Dict[str, Any]] = {}
 
@@ -254,7 +264,7 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 # ---------------------------------------------------------------------------
 
 class FirestoreService:
-    """Data access layer — real Firestore when credentials present, else in-memory."""
+    """Data access layer — real Firestore when credentials present, mirrored locally."""
 
     def _use_firestore(self) -> bool:
         _init_firebase()
@@ -277,9 +287,13 @@ class FirestoreService:
                     query = query.where("category", "==", category_filter)
                 if risk_filter:
                     query = query.where("waste_risk", "==", risk_filter)
-                return [_doc_to_dict(d) for d in query.stream()]
+                fs_items = [_doc_to_dict(d) for d in query.stream()]
+                if fs_items:
+                    for item in fs_items:
+                        _inventory_store[item["id"]] = item
+                    return fs_items
             except Exception as exc:
-                logger.error("Firestore get_inventory error: %s", exc)
+                logger.error("Firestore get_inventory error: %s — falling back to local store.", exc)
 
         items = list(_inventory_store.values())
         if status_filter:
@@ -294,7 +308,8 @@ class FirestoreService:
         if self._use_firestore():
             try:
                 doc = _db.collection(INVENTORY_COLLECTION).document(item_id).get()
-                return _doc_to_dict(doc) if doc.exists else None
+                if doc.exists:
+                    return _doc_to_dict(doc)
             except Exception as exc:
                 logger.error("Firestore get_item error: %s", exc)
         return _inventory_store.get(item_id)
@@ -305,14 +320,15 @@ class FirestoreService:
         item_data.setdefault("created_at", now)
         item_data["updated_at"] = now
 
+        # Always save in memory immediately
+        _inventory_store[item_data["id"]] = item_data
+
         if self._use_firestore():
             try:
                 _db.collection(INVENTORY_COLLECTION).document(item_data["id"]).set(item_data)
-                return item_data
             except Exception as exc:
-                logger.error("Firestore add_item error: %s — saving in memory.", exc)
+                logger.error("Firestore add_item error: %s — preserved in local memory.", exc)
 
-        _inventory_store[item_data["id"]] = item_data
         return item_data
 
     async def update_item(
@@ -320,37 +336,37 @@ class FirestoreService:
     ) -> Optional[Dict[str, Any]]:
         updates["updated_at"] = datetime.utcnow().isoformat()
 
+        if item_id in _inventory_store:
+            _inventory_store[item_id].update(updates)
+
         if self._use_firestore():
             try:
                 ref = _db.collection(INVENTORY_COLLECTION).document(item_id)
                 doc = ref.get()
-                if not doc.exists:
-                    return None
-                ref.update(updates)
-                return {**doc.to_dict(), **updates, "id": item_id}
+                if doc.exists:
+                    ref.update(updates)
+                    return {**doc.to_dict(), **updates, "id": item_id}
             except Exception as exc:
                 logger.error("Firestore update_item error: %s", exc)
 
-        if item_id not in _inventory_store:
-            return None
-        _inventory_store[item_id].update(updates)
-        return _inventory_store[item_id]
+        return _inventory_store.get(item_id)
 
     async def delete_item(self, item_id: str) -> bool:
+        existed = False
+        if item_id in _inventory_store:
+            del _inventory_store[item_id]
+            existed = True
+
         if self._use_firestore():
             try:
                 ref = _db.collection(INVENTORY_COLLECTION).document(item_id)
-                if not ref.get().exists:
-                    return False
-                ref.delete()
-                return True
+                if ref.get().exists:
+                    ref.delete()
+                    existed = True
             except Exception as exc:
                 logger.error("Firestore delete_item error: %s", exc)
 
-        if item_id in _inventory_store:
-            del _inventory_store[item_id]
-            return True
-        return False
+        return existed
 
     # -- Food Banks -----------------------------------------------------------
 
@@ -379,22 +395,25 @@ class FirestoreService:
         donation_data["id"] = str(uuid.uuid4())
         donation_data["created_at"] = datetime.utcnow().isoformat()
 
+        _donations_store[donation_data["id"]] = donation_data
+
         if self._use_firestore():
             try:
                 _db.collection(DONATIONS_COLLECTION).document(
                     donation_data["id"]
                 ).set(donation_data)
-                return donation_data
             except Exception as exc:
                 logger.error("Firestore add_donation error: %s", exc)
 
-        _donations_store[donation_data["id"]] = donation_data
         return donation_data
 
     async def get_donations(self) -> List[Dict[str, Any]]:
         if self._use_firestore():
             try:
-                return [_doc_to_dict(d) for d in _db.collection(DONATIONS_COLLECTION).stream()]
+                docs = _db.collection(DONATIONS_COLLECTION).stream()
+                fs_donations = [_doc_to_dict(d) for d in docs]
+                if fs_donations:
+                    return fs_donations
             except Exception as exc:
                 logger.error("Firestore get_donations error: %s", exc)
         return list(_donations_store.values())

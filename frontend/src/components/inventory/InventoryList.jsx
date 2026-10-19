@@ -29,7 +29,8 @@ export default function InventoryList() {
   const [sort, setSort] = useState('expiry')
 
   const { data, isLoading } = useInventoryList({ risk, category, sort })
-  const items = data?.items ?? MOCK_ITEMS
+  const rawItems = Array.isArray(data) ? data : (data?.items || [])
+  const items = rawItems.length > 0 ? rawItems : (isLoading ? [] : rawItems)
 
   const filtered = items
     .filter(item => risk === 'All' || item.waste_risk === risk)

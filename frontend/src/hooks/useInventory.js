@@ -91,8 +91,7 @@ export function useInventoryList(params = {}) {
   return useQuery({
     queryKey: ['inventory', params],
     queryFn: () => getInventory(params),
-    placeholderData: { items: MOCK_INVENTORY, total: MOCK_INVENTORY.length },
-    select: (data) => data?.items ?? data ?? MOCK_INVENTORY,
+    select: (data) => (Array.isArray(data) ? data : data?.items || []),
     retry: 1,
   });
 }

@@ -6,10 +6,10 @@ import google.genai as genai  # type: ignore
 from app.config import get_settings
 
 # ── Model IDs ──────────────────────────────────────────────────────────────────
-VISION_MODEL = "gemini-2.5-pro-preview-06-05"
-PREDICTION_MODEL = "gemini-2.5-flash-preview-05-20"
-ACTION_MODEL = "gemini-2.5-pro-preview-06-05"
-CHAT_MODEL = "gemini-2.5-flash-preview-05-20"
+VISION_MODEL = "gemini-2.5-flash"
+PREDICTION_MODEL = "gemini-2.5-flash"
+ACTION_MODEL = "gemini-2.5-flash"
+CHAT_MODEL = "gemini-2.5-flash"
 
 # ── Singleton client ───────────────────────────────────────────────────────────
 _client: genai.Client | None = None
